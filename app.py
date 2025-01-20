@@ -20,13 +20,9 @@ def generate_secret_key():
 
 app.secret_key = generate_secret_key()
 
-# Configuração do banco de dados
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "paladium1009")  # Substituir por variáveis de ambiente seguras
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "chamados_db")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chamados.db'
+# Configuração do banco de dados (ajustada para Render)
+# Usamos o sistema de arquivos de instância para persistência de dados no Render
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'chamados.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Logger
@@ -35,6 +31,16 @@ logging.basicConfig(level=logging.INFO)
 # Inicialização do banco de dados
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Criação do banco de dados manualmente no início
+def create_db():
+    with app.app_context():
+        if not os.path.exists(os.path.join(app.instance_path, 'chamados.db')):
+            os.makedirs(app.instance_path, exist_ok=True)
+            db.create_all()
+
+# Criação do banco de dados manualmente no início
+create_db()
 
 # Modelos
 class Chamado(db.Model):
@@ -60,7 +66,9 @@ class Usuario(db.Model):
     senha = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default="Cliente")
 
-# Rotas principais
+# Removemos o decorador @app.before_first_request aqui
+# O código anterior tinha essa função que não é mais necessária
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -389,5 +397,6 @@ if __name__ == '__main__':
             )
             db.session.add(admin)
             db.session.commit()
+            
 
     app.run(host='0.0.0.0', port=5000)
