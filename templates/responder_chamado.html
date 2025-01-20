@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder Chamado</title>
+    <style>
+        body {
+            background: url('/static/fundo.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Adicionando uma camada semi-transparente para clarear o fundo */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.5); /* Ajuste a opacidade aqui */
+            z-index: -1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+        }
+
+        header img {
+            height: 100px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: white;
+        }
+
+        div, form {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            width: 80%;
+        }
+
+        form input, form select, form button, form textarea {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+        }
+
+        button {
+            background-color: #5bc0de; /* Azul claro */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #31b0d5; /* Azul mais escuro */
+        }
+
+        footer {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .voltar {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .voltar a {
+            text-decoration: none;
+            color: #00cfff;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .voltar a:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Responder Chamado</h1>
+    
+    <!-- Informações do Chamado -->
+    <div>
+        <h2>Detalhes do Chamado</h2>
+        <p><strong>Protocolo:</strong> {{ chamado.numero }}</p>
+        <p><strong>Defeito:</strong> {{ chamado.defeito }}</p>
+        <p><strong>Posto:</strong> {{ chamado.posto }}</p>
+        <p><strong>Telefone:</strong> {{ chamado.telefone }}</p>
+        <p><strong>IP da Máquina:</strong> {{ chamado.ip_maquina }}</p>
+        <p><strong>Solicitante:</strong> {{ chamado.solicitante }}</p>
+        <p><strong>Status Atual:</strong> {{ chamado.status }}</p>
+        <p><strong>Data de Abertura:</strong> {{ chamado.data_abertura.strftime('%d/%m/%Y %H:%M') }}</p>
+    </div>
+    
+    <!-- Formulário para Responder Chamado -->
+    <form action="/responder_chamado/{{ chamado.id }}" method="post">
+        <h2>Responder ao Chamado</h2>
+        <label for="resposta">Mensagem/Resposta:</label>
+        <textarea id="resposta" name="resposta" required></textarea><br>
+
+        <label for="status">Alterar Status:</label>
+        <select id="status" name="status" required>
+            <option value="Aguardando Retorno do Cliente">Aguardando Retorno do Cliente</option>
+            <option value="Fila">Fila</option>
+            <option value="Resolvido">Resolvido</option>
+        </select><br>
+        
+        <button type="submit">Enviar Resposta</button>
+    </form>
+
+    <div class="voltar">
+        <a href="/chamados_abertos">Voltar para Chamados Abertos</a>
+    </div>
+
+    <footer>
+        <p>Seção Setorial de Informática/SIH-PCGO - Tel: (62) 3201-2706 / 2701</p>
+        <p>Sistema desenvolvido por <b>@Geann Gomes</b></p>
+    </footer>
+</body>
+</html>

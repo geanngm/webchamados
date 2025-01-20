@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Usuário</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: url('/static/fundo.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            background-blend-mode: overlay;
+        }
+        header, footer {
+            background-color: rgba(244, 244, 244, 0.8);
+            text-align: center;
+            padding: 10px 20px;
+        }
+        header img {
+            height: 80px;
+            margin-right: 20px;
+        }
+        footer p {
+            margin: 5px 0;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form {
+            margin: 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        form label {
+            font-weight: bold;
+            width: 100%;
+        }
+        form input, form select, form button {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="/static/PCGO.jpg" alt="Polícia Civil">
+        <img src="/static/SIH-GO.jpg" alt="Superintendência de Identificação Humana">
+    </header>
+
+    <main>
+        <h1>Editar Usuário</h1>
+
+        <!-- Exibição de mensagem de erro -->
+        {% if erro %}
+        <p class="error-message">{{ erro }}</p>
+        {% endif %}
+
+        <!-- Formulário para edição de usuário -->
+        <form action="/editar_usuario/{{ usuario.id }}" method="post">
+            <div>
+                <label for="nome_posto">Posto:</label>
+                <select id="nome_posto" name="nome_posto" required>
+                    {% for posto in postos %}
+                        <option value="{{ posto }}" {% if usuario.nome_posto == posto %}selected{% endif %}>{{ posto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="nome_usuario">Nome do Usuário:</label>
+                <input type="text" id="nome_usuario" name="nome_usuario" value="{{ usuario.nome_usuario }}" required>
+            </div>
+
+            <div>
+                <label for="email_unidade">E-mail da Unidade:</label>
+                <input type="email" id="email_unidade" name="email_unidade" value="{{ usuario.email_unidade }}" required>
+            </div>
+
+            <div>
+                <label for="telefone">Telefone:</label>
+                <input type="text" id="telefone" name="telefone" value="{{ usuario.telefone }}" required>
+            </div>
+
+            <div>
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" value="{{ usuario.senha }}" required>
+            </div>
+
+            <div>
+                <label for="tipo">Tipo:</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="Cliente" {% if usuario.tipo == 'Cliente' %}selected{% endif %}>Cliente</option>
+                    <option value="Administrador" {% if usuario.tipo == 'Administrador' %}selected{% endif %}>Administrador</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Salvar Alterações</button>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>Seção Setorial de Informática/SIH-PCGO - Tel: (62) 3201-2706 / 2701</p>
+        <p>Sistema desenvolvido por <b>@Geann Gomes</b></p>
+    </footer>
+</body>
+</html>

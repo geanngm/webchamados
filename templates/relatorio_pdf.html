@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório</title>
+</head>
+<body>
+    <h1>Relatório de Chamados</h1>
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Posto</th>
+                <th>Defeito</th>
+                <th>Data de Abertura</th>
+                <th>Data de Fechamento</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chamado in chamados %}
+            <tr>
+                <td>{{ chamado.numero }}</td>
+                <td>{{ chamado.posto }}</td>
+                <td>{{ chamado.defeito }}</td>
+                <td>{{ chamado.data_abertura.strftime('%d/%m/%Y') }}</td>
+                <td>{{ chamado.data_fechamento.strftime('%d/%m/%Y') if chamado.data_fechamento else '---' }}</td>
+                <td>{{ chamado.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

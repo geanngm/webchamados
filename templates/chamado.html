@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamado {{ chamado.numero }}</title>
+</head>
+<body>
+    <h1>Chamado {{ chamado.numero }}</h1>
+    <p><strong>Posto:</strong> {{ chamado.posto }}</p>
+    <p><strong>Defeito:</strong> {{ chamado.defeito }}</p>
+    <p><strong>Telefone:</strong> {{ chamado.telefone }}</p>
+    <p><strong>IP da Máquina:</strong> {{ chamado.ip_maquina }}</p>
+    <p><strong>Solicitante:</strong> {{ chamado.solicitante }}</p>
+    <p><strong>Status:</strong> {{ chamado.status }}</p>
+    <p><strong>Data de Abertura:</strong> {{ chamado.data_abertura.strftime('%d/%m/%Y') }}</p>
+    
+    {% if chamado.status == 'Aberto' %}
+    <form action="/chamado/{{ chamado.id }}" method="post">
+        <label for="resposta">Responder:</label>
+        <textarea id="resposta" name="resposta" required></textarea><br>
+        <button type="submit">Salvar Resposta e Fechar</button>
+    </form>
+    {% else %}
+    <p><strong>Resposta:</strong> {{ chamado.resposta }}</p>
+    <p><strong>Data de Fechamento:</strong> {{ chamado.data_fechamento.strftime('%d/%m/%Y') }}</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamados Abertos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: url('/static/fundo.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            background-blend-mode: overlay;
+        }
+        header, footer {
+            background-color: rgba(244, 244, 244, 0.8);
+            text-align: center;
+            padding: 10px 20px;
+        }
+        header img {
+            height: 80px;
+        }
+        footer p {
+            margin: 5px 0;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="/static/PCGO.jpg" alt="Polícia Civil">
+        <img src="/static/SIH-GO.jpg" alt="Superintendência de Identificação Humana">
+    </header>
+
+    <main>
+        <h1>Chamados Abertos</h1>
+        <a href="/index">Voltar para a Página Inicial</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Posto</th>
+                    <th>Defeito</th>
+                    <th>Data de Abertura</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for chamado in chamados %}
+                <tr>
+                    <td>{{ chamado.numero }}</td>
+                    <td>{{ chamado.posto if chamado.posto else "N/D" }}</td>
+                    <td>{{ chamado.defeito }}</td>
+                    <td>{{ chamado.data_abertura.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if session['usuario_tipo'] == 'Administrador' %}
+                        <a href="/responder_chamado/{{ chamado.id }}">Responder</a>
+                        {% else %}
+                        <span>N/D</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not chamados %}
+                <tr>
+                    <td colspan="5">Nenhum chamado encontrado.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>Seção Setorial de Informática/SIH-PCGO - Tel: (62) 3201-2706 / 2701</p>
+        <p>Sistema desenvolvido por <b>@Geann Gomes</b></p>
+    </footer>
+</body>
+</html>

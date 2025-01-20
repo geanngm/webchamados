@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Novo Chamado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: url('/static/fundo.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            background-blend-mode: overlay;
+        }
+        header, footer {
+            background-color: rgba(244, 244, 244, 0.8);
+            text-align: center;
+            padding: 10px 20px;
+        }
+        header img {
+            height: 80px;
+            margin-right: 20px;
+        }
+        footer p {
+            margin: 5px 0;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form {
+            margin: 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        form label {
+            font-weight: bold;
+            width: 100%;
+        }
+        form input, form select, form textarea, form button {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+        form textarea {
+            height: 120px;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        a:hover {
+            color: #0056b3;
+        }
+        footer {
+            margin-top: 20px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="/static/PCGO.jpg" alt="Polícia Civil">
+        <img src="/static/SIH-GO.jpg" alt="Superintendência de Identificação Humana">
+    </header>
+
+    <main>
+        <h1>Criar Novo Chamado</h1>
+
+        <!-- Exibição de mensagem de erro ou sucesso -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li style="color: {{ 'red' if category == 'error' else 'green' }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Formulário para criação de chamado -->
+        <form action="/abrir_chamado" method="post">
+            <div>
+                <label for="defeito">Descrição do Defeito:</label>
+                <textarea id="defeito" name="defeito" required></textarea>
+            </div>
+
+            <div>
+                <label for="posto">Posto:</label>
+                <select id="posto" name="posto" required>
+                    {% for posto in postos %}
+                        <option value="{{ posto }}">{{ posto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="telefone">Telefone:</label>
+                <input type="text" id="telefone" name="telefone" required>
+            </div>
+
+            <div>
+                <label for="ip_maquina">IP da Máquina:</label>
+                <input type="text" id="ip_maquina" name="ip_maquina" required>
+            </div>
+
+            <div>
+                <label for="solicitante">Nome do Solicitante:</label>
+                <input type="text" id="solicitante" name="solicitante" required>
+            </div>
+
+            <div>
+                <label for="patrimonio">Patrimônio/Número de Série:</label>
+                <input type="text" id="patrimonio" name="patrimonio" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Salvar</button>
+                <a href="/index" style="margin-left: 10px;"><button type="button">Voltar</button></a>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>Seção Setorial de Informática/SIH-PCGO - Tel: (62) 3201-2706 / 2701</p>
+        <p>Sistema desenvolvido por <b>@Geann Gomes</b></p>
+    </footer>
+</body>
+</html>
