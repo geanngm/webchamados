@@ -106,7 +106,159 @@ def index():
 
     return render_template('index.html', nome_usuario=usuario.nome_usuario, usuario_tipo=usuario.tipo)
 
+<<<<<<< HEAD
 # Rota para visualizar chamados abertos
+=======
+
+@app.route('/gerenciar_usuarios', methods=['GET', 'POST'])
+def gerenciar_usuarios():
+    if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
+        return redirect(url_for('login'))
+
+    usuarios = Usuario.query.all()
+    postos = [f"{i:03}" for i in range(1, 201)] + ["SIH"]
+
+    if request.method == 'POST':
+        nome_posto = request.form.get('nome_posto')
+        nome_usuario = request.form.get('nome_usuario')
+        email_unidade = request.form.get('email_unidade')
+        telefone = request.form.get('telefone')
+        senha = request.form.get('senha')
+        tipo = request.form.get('tipo')
+
+        try:
+            novo_usuario = Usuario(
+                nome_posto=nome_posto,
+                nome_usuario=nome_usuario,
+                email_unidade=email_unidade,
+                telefone=telefone,
+                senha=senha,
+                tipo=tipo
+            )
+            db.session.add(novo_usuario)
+            db.session.commit()
+            return redirect(url_for('gerenciar_usuarios'))
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Erro ao adicionar usuário: {e}")
+            erro = "Erro ao salvar usuário. Verifique os dados e tente novamente."
+            return render_template('gerenciar_usuarios.html', usuarios=usuarios, postos=postos, erro=erro)
+
+    return render_template('gerenciar_usuarios.html', usuarios=usuarios, postos=postos)
+
+# Adicionar as outras rotas mantendo a estrutura do código enviada.
+
+@app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
+def editar_usuario(id):
+    if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
+        return redirect(url_for('login'))
+
+    usuario = Usuario.query.get_or_404(id)
+    postos = [f"{i:03}" for i in range(1, 201)] + ["SIH"]
+
+    if request.method == 'POST':
+        usuario.nome_posto = request.form.get('nome_posto').strip()
+        usuario.nome_usuario = request.form.get('nome_usuario').strip()
+        usuario.email_unidade = request.form.get('email_unidade').strip()
+        usuario.telefone = request.form.get('telefone').strip()
+        usuario.senha = request.form.get('senha').strip()
+        usuario.tipo = request.form.get('tipo').strip()
+
+        try:
+            db.session.commit()
+            return redirect(url_for('gerenciar_usuarios'))
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Erro ao editar usuário: {e}")
+            erro = "Erro ao salvar alterações. Verifique os dados e tente novamente."
+            return render_template('editar_usuario.html', usuario=usuario, postos=postos, erro=erro)
+
+    return render_template('editar_usuario.html', usuario=usuario, postos=postos)
+
+@app.route('/excluir_usuario/<int:id>', methods=['POST'])
+def excluir_usuario(id):
+    if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
+        return redirect(url_for('login'))
+
+    usuario = Usuario.query.get_or_404(id)
+    db.session.delete(usuario)
+    db.session.commit()
+    return redirect(url_for('gerenciar_usuarios'))
+
+@app.route('/abrir_chamado', methods=['GET', 'POST'])
+def abrir_chamado():
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+
+    postos = [f"{i:03}" for i in range(1, 201)] + ["SIH"]
+
+    if request.method == 'POST':
+        try:
+            ultimo_chamado = Chamado.query.order_by(Chamado.id.desc()).first()
+            numero = f"CH-{(ultimo_chamado.id + 1) if ultimo_chamado else 1:06d}"
+
+            defeito = request.form['defeito'].strip()
+            posto = request.form['posto'].strip()
+            telefone = request.form['telefone'].strip()
+            ip_maquina = request.form['ip_maquina'].strip()
+            solicitante = request.form['solicitante'].strip()
+            patrimonio = request.form['patrimonio'].strip()
+
+            novo_chamado = Chamado(
+                numero=numero,
+                defeito=defeito,
+                posto=posto,
+                telefone=telefone,
+                ip_maquina=ip_maquina,
+                                solicitante=solicitante,
+                resposta=f"Patrimônio/Número de Série: {patrimonio}",
+                status="Aberto",
+                data_abertura=datetime.utcnow()
+            )
+            db.session.add(novo_chamado)
+            db.session.commit()
+
+            flash(f"Chamado criado com sucesso! Número: {numero}", "success")
+            return redirect(url_for('chamados_abertos'))
+
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Erro ao criar chamado: {e}")
+            flash("Erro ao criar o chamado.", "error")
+            return render_template('abrir_chamado.html', postos=postos, erro="Erro ao criar o chamado.")
+
+    return render_template('abrir_chamado.html', postos=postos)
+
+
+@app.route('/responder_chamado/<int:id>', methods=['GET', 'POST'])
+def responder_chamado(id):
+    if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
+        return redirect(url_for('login'))
+
+    chamado = Chamado.query.get_or_404(id)
+
+    if request.method == 'POST':
+        resposta = request.form['resposta'].strip()  # Obtém a resposta dada pelo administrador
+        status = request.form['status'].strip()  # Obtém o status do chamado
+
+        # Armazenando a resposta tanto no campo 'resposta' quanto no campo 'acao'
+        chamado.resposta = resposta
+        chamado.acao = resposta  # Armazenando a resposta na coluna 'acao'
+
+        # Atualizando o status e a data de fechamento se necessário
+        if status == 'Resolvido':
+            chamado.status = 'Fechado'
+            chamado.data_fechamento = datetime.utcnow()  # Define a data de fechamento para o momento atual
+        else:
+            chamado.status = status  # Atualiza o status com o valor informado
+
+        db.session.commit()  # Comita as alterações no banco de dados
+        flash('Chamado atualizado com sucesso!', 'success')  # Exibe uma mensagem de sucesso
+        return redirect(url_for('chamados_abertos'))  # Redireciona para a lista de chamados abertos
+
+    return render_template('responder_chamado.html', chamado=chamado)
+
+>>>>>>> c7bd7f988a3248d924a2eca76d299ab86c0f602c
 @app.route('/chamados_abertos')
 def chamados_abertos():
     if 'usuario_id' not in session:
@@ -257,3 +409,4 @@ if __name__ == '__main__':
             db.session.commit()
 
     app.run(host='0.0.0.0', port=5000)
+
