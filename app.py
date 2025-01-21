@@ -22,11 +22,11 @@ app.secret_key = generate_secret_key()
 
 # Configuração do banco de dados (ajustada para Render ou persistência local)
 def get_database_path():
-    default_path = "/var/data/chamados.db"  # Caminho persistente para o banco de dados
+    # Usa /tmp como diretório padrão para persistência temporária
+    default_path = "/tmp/chamados.db"  # Caminho permitível para escrita na Render
     return os.getenv('DATABASE_PATH', default_path)
 
 db_path = get_database_path()
-os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Garante que o diretório exista
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -102,6 +102,7 @@ def index():
         return redirect(url_for('logout'))
 
     return render_template('index.html', nome_usuario=usuario.nome_usuario, usuario_tipo=usuario.tipo)
+
 
 @app.route('/gerenciar_usuarios', methods=['GET', 'POST'])
 def gerenciar_usuarios():
@@ -401,3 +402,4 @@ if __name__ == '__main__':
             db.session.commit()
 
     app.run(host='0.0.0.0', port=5000)
+
