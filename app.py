@@ -22,15 +22,11 @@ app.secret_key = generate_secret_key()
 
 # Configuração do banco de dados (ajustada para Render ou persistência local)
 def get_database_path():
-<<<<<<< HEAD
-    # Use o volume persistente configurado no Render
-    return os.getenv('DATABASE_PATH', '/var/data/chamados.db')
-=======
-    default_path = os.path.join(app.instance_path, 'chamados.db')
+    default_path = "/var/data/chamados.db"  # Caminho persistente para o banco de dados
     return os.getenv('DATABASE_PATH', default_path)
->>>>>>> 6c1992a4ab3cf9c03431021349eb9347a28e3c99
 
 db_path = get_database_path()
+os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Garante que o diretório exista
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -44,8 +40,6 @@ migrate = Migrate(app, db)
 
 # Criação do banco de dados manualmente no início
 def create_db():
-    db_dir = os.path.dirname(db_path)
-    os.makedirs(db_dir, exist_ok=True)  # Garante que o diretório existe
     if not os.path.exists(db_path):
         with app.app_context():
             db.create_all()
@@ -144,6 +138,8 @@ def gerenciar_usuarios():
             return render_template('gerenciar_usuarios.html', usuarios=usuarios, postos=postos, erro=erro)
 
     return render_template('gerenciar_usuarios.html', usuarios=usuarios, postos=postos)
+
+# Adicionar as outras rotas mantendo a estrutura do código enviada.
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
