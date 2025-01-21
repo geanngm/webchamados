@@ -20,13 +20,18 @@ def generate_secret_key():
 
 app.secret_key = generate_secret_key()
 
-# Configuração do banco de dados (ajustada para Render)
-# Usamos o sistema de arquivos de instância para persistência de dados no Render
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'chamados.db')}"
+# Configuração do banco de dados (ajustada para Render ou persistência local)
+def get_database_path():
+    default_path = os.path.join(app.instance_path, 'chamados.db')
+    return os.getenv('DATABASE_PATH', default_path)
+
+db_path = get_database_path()
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Logger
 logging.basicConfig(level=logging.INFO)
+logging.info(f"Banco de dados configurado em: {db_path}")
 
 # Inicialização do banco de dados
 db = SQLAlchemy(app)
@@ -34,12 +39,13 @@ migrate = Migrate(app, db)
 
 # Criação do banco de dados manualmente no início
 def create_db():
-    with app.app_context():
-        if not os.path.exists(os.path.join(app.instance_path, 'chamados.db')):
-            os.makedirs(app.instance_path, exist_ok=True)
+    db_dir = os.path.dirname(db_path)
+    os.makedirs(db_dir, exist_ok=True)  # Garante que o diretório existe
+    if not os.path.exists(db_path):
+        with app.app_context():
             db.create_all()
+            logging.info("Banco de dados criado com sucesso.")
 
-# Criação do banco de dados manualmente no início
 create_db()
 
 # Modelos
@@ -66,9 +72,7 @@ class Usuario(db.Model):
     senha = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default="Cliente")
 
-# Removemos o decorador @app.before_first_request aqui
-# O código anterior tinha essa função que não é mais necessária
-
+# Rotas
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
