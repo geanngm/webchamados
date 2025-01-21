@@ -22,8 +22,13 @@ app.secret_key = generate_secret_key()
 
 # Configuração do banco de dados (ajustada para Render ou persistência local)
 def get_database_path():
+<<<<<<< HEAD
     # Use o volume persistente configurado no Render
     return os.getenv('DATABASE_PATH', '/var/data/chamados.db')
+=======
+    default_path = os.path.join(app.instance_path, 'chamados.db')
+    return os.getenv('DATABASE_PATH', default_path)
+>>>>>>> 6c1992a4ab3cf9c03431021349eb9347a28e3c99
 
 db_path = get_database_path()
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
