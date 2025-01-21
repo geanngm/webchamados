@@ -20,13 +20,18 @@ def generate_secret_key():
 
 app.secret_key = generate_secret_key()
 
-# Configuração do banco de dados (ajustada para Render)
-# Usamos o sistema de arquivos de instância para persistência de dados no Render
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(app.instance_path, 'chamados.db')}"
+# Configuração do banco de dados (ajustada para Render ou persistência local)
+def get_database_path():
+    # Use o volume persistente configurado no Render
+    return os.getenv('DATABASE_PATH', '/var/data/chamados.db')
+
+db_path = get_database_path()
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Logger
 logging.basicConfig(level=logging.INFO)
+logging.info(f"Banco de dados configurado em: {db_path}")
 
 # Inicialização do banco de dados
 db = SQLAlchemy(app)
@@ -34,12 +39,13 @@ migrate = Migrate(app, db)
 
 # Criação do banco de dados manualmente no início
 def create_db():
-    with app.app_context():
-        if not os.path.exists(os.path.join(app.instance_path, 'chamados.db')):
-            os.makedirs(app.instance_path, exist_ok=True)
+    db_dir = os.path.dirname(db_path)
+    os.makedirs(db_dir, exist_ok=True)  # Garante que o diretório existe
+    if not os.path.exists(db_path):
+        with app.app_context():
             db.create_all()
+            logging.info("Banco de dados criado com sucesso.")
 
-# Criação do banco de dados manualmente no início
 create_db()
 
 # Modelos
@@ -66,9 +72,7 @@ class Usuario(db.Model):
     senha = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default="Cliente")
 
-# Removemos o decorador @app.before_first_request aqui
-# O código anterior tinha essa função que não é mais necessária
-
+# Rotas
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -100,15 +104,12 @@ def index():
 
     return render_template('index.html', nome_usuario=usuario.nome_usuario, usuario_tipo=usuario.tipo)
 
-# Outras rotas e lógica permanecem iguais...
 @app.route('/gerenciar_usuarios', methods=['GET', 'POST'])
 def gerenciar_usuarios():
     if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
         return redirect(url_for('login'))
 
-    # Buscar usuários cadastrados
     usuarios = Usuario.query.all()
-    # Opções de postos (01 a 200 e SIH)
     postos = [f"{i:03}" for i in range(1, 201)] + ["SIH"]
 
     if request.method == 'POST':
@@ -185,7 +186,6 @@ def abrir_chamado():
 
     if request.method == 'POST':
         try:
-            # Geração de número único para o chamado
             ultimo_chamado = Chamado.query.order_by(Chamado.id.desc()).first()
             numero = f"CH-{(ultimo_chamado.id + 1) if ultimo_chamado else 1:06d}"
 
@@ -196,14 +196,13 @@ def abrir_chamado():
             solicitante = request.form['solicitante'].strip()
             patrimonio = request.form['patrimonio'].strip()
 
-            # Criação de um novo chamado
             novo_chamado = Chamado(
                 numero=numero,
                 defeito=defeito,
                 posto=posto,
                 telefone=telefone,
                 ip_maquina=ip_maquina,
-                solicitante=solicitante,
+                                solicitante=solicitante,
                 resposta=f"Patrimônio/Número de Série: {patrimonio}",
                 status="Aberto",
                 data_abertura=datetime.utcnow()
@@ -310,7 +309,6 @@ def chamados_fechados():
 
     return render_template('chamados_fechados.html', postos=postos, chamados=chamados, is_cliente=False)
 
-
 @app.route('/trocar_senha', methods=['GET', 'POST'])
 def trocar_senha():
     if 'usuario_id' not in session:
@@ -326,6 +324,7 @@ def trocar_senha():
             if nova_senha == confirmar_senha:
                 usuario.senha = nova_senha
                 db.session.commit()
+                flash("Senha alterada com sucesso!", "success")
                 return redirect(url_for('index'))
             else:
                 erro = "As novas senhas não coincidem."
@@ -381,6 +380,8 @@ def relatorio():
 
     return render_template('relatorio.html', chamados=chamados, postos=postos, 
                            filtro_posto=filtro_posto, filtro_inicio=filtro_inicio, filtro_fim=filtro_fim)
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -397,6 +398,5 @@ if __name__ == '__main__':
             )
             db.session.add(admin)
             db.session.commit()
-            
 
     app.run(host='0.0.0.0', port=5000)
