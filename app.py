@@ -106,10 +106,6 @@ def index():
 
     return render_template('index.html', nome_usuario=usuario.nome_usuario, usuario_tipo=usuario.tipo)
 
-<<<<<<< HEAD
-# Rota para visualizar chamados abertos
-=======
-
 @app.route('/gerenciar_usuarios', methods=['GET', 'POST'])
 def gerenciar_usuarios():
     if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
@@ -258,7 +254,6 @@ def responder_chamado(id):
 
     return render_template('responder_chamado.html', chamado=chamado)
 
->>>>>>> c7bd7f988a3248d924a2eca76d299ab86c0f602c
 @app.route('/chamados_abertos')
 def chamados_abertos():
     if 'usuario_id' not in session:
