@@ -22,9 +22,10 @@ app.secret_key = generate_secret_key()
 
 # Configuração do banco de dados
 def get_database_path():
-    # Usa /tmp como diretório padrão para persistência temporária
-    default_path = "/tmp/chamados.db"  # Caminho permitível para escrita na Render
-    return os.getenv('DATABASE_PATH', default_path)
+    # Define um caminho persistente para o banco de dados
+    data_dir = os.getenv('RENDER_DISK_PATH', '/persistent')
+    os.makedirs(data_dir, exist_ok=True)  # Garante que o diretório existe
+    return os.path.join(data_dir, "chamados.db")
 
 db_path = get_database_path()
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
@@ -80,7 +81,7 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         senha = request.form['senha']
-        usuario = Usuario.query.filter_by(email_unidade=email, senha=senha).first()
+        usuario = Usuario.query.filter(Usuario.email_unidade == email, Usuario.senha == senha).first()
         if usuario:
             session['usuario_id'] = usuario.id
             session['usuario_tipo'] = usuario.tipo
@@ -254,6 +255,7 @@ def responder_chamado(id):
 
     return render_template('responder_chamado.html', chamado=chamado)
 
+>>>>>>> c7bd7f988a3248d924a2eca76d299ab86c0f602c
 @app.route('/chamados_abertos')
 def chamados_abertos():
     if 'usuario_id' not in session:
@@ -404,4 +406,3 @@ if __name__ == '__main__':
             db.session.commit()
 
     app.run(host='0.0.0.0', port=5000)
-
