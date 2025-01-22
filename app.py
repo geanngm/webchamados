@@ -48,14 +48,11 @@ migrate = Migrate(app, db)
 # Teste de conexão ao banco de dados
 def test_db_connection():
     try:
-        with app.app_context():
+        with app.app_context():  # Garante o contexto do aplicativo
             db.session.execute(text('SELECT 1'))
             logging.info("Conexão com o banco de dados bem-sucedida.")
     except Exception as e:
         logging.error("Erro ao conectar ao banco de dados.", exc_info=True)
-
-# Executa o teste de conexão
-test_db_connection()
 
 # Função utilitária para salvar entidades
 def salvar_entidade(entidade):
@@ -101,11 +98,17 @@ class Usuario(db.Model):
     def verificar_senha(self, senha):
         return check_password_hash(self.senha, senha)
 
-# Inicializar o banco de dados e criar tabelas, se necessário
-with app.app_context():
-    db.create_all()
-    logging.info("Tabelas criadas ou verificadas.")
+# Função de inicialização
+def inicializar_app():
+    with app.app_context():
+        db.create_all()  # Cria as tabelas se necessário
+        test_db_connection()  # Testa a conexão
+        logging.info("Tabelas criadas ou verificadas.")
 
+# Apenas inicializa o banco de dados se for o processo principal
+if __name__ == "__main__":
+    inicializar_app()
+    app.run(debug=True)
 
 # Rotas
 @app.route('/', methods=['GET', 'POST'])
