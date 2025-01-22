@@ -111,8 +111,8 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         senha = request.form['senha']
-        usuario = Usuario.query.filter(Usuario.email_unidade == email, Usuario.senha == senha).first()
-        if usuario:
+        usuario = Usuario.query.filter_by(email_unidade=email).first()  # Busca o usuário
+        if usuario and usuario.verificar_senha(senha):  # Verifica o hash da senha
             session['usuario_id'] = usuario.id
             session['usuario_tipo'] = usuario.tipo
             return redirect(url_for('index'))
@@ -420,16 +420,16 @@ if __name__ == '__main__':
         db.create_all()
 
         # Criar o administrador inicial, se não existir
-        if not Usuario.query.filter_by(email_unidade='admin@admin.com').first():
-            admin = Usuario(
-                nome_posto='Admin',
-                nome_usuario='Administrador',
-                email_unidade='admin@admin.com',
-                telefone='0000000000',
-                senha='admin123',
-                tipo='Administrador'
-            )
-            db.session.add(admin)
-            db.session.commit()
+if not Usuario.query.filter_by(email_unidade='admin@admin.com').first():
+    admin = Usuario(
+        nome_posto='Admin',
+        nome_usuario='Administrador',
+        email_unidade='admin@admin.com',
+        telefone='0000000000',
+        tipo='Administrador'
+    )
+    admin.set_senha('admin123')  # Utiliza o método para hash da senha
+    db.session.add(admin)
+    db.session.commit()
 
     app.run(host='0.0.0.0', port=5000)
