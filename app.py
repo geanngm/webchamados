@@ -5,6 +5,7 @@ import logging
 from flask_migrate import Migrate
 import os
 import secrets
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configuração do app
 app = Flask(__name__)
@@ -20,41 +21,56 @@ def generate_secret_key():
 
 app.secret_key = generate_secret_key()
 
-# Configuração do banco de dados
-def get_database_path():
-    # Define um caminho persistente para o banco de dados
-    data_dir = os.getenv('RENDER_DISK_PATH', '/persistent')
-    os.makedirs(data_dir, exist_ok=True)  # Garante que o diretório existe
-    return os.path.join(data_dir, "chamados.db")
+# Configuração do banco de dados usando PostgreSQL
+DB_USER = os.getenv('DB_USER', 'projeto_chamados_user')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'RwV8G694QxAyCdhGNb3WYznrwqyjC6C6')
+DB_HOST = os.getenv('DB_HOST', 'dpg-cu8gtshopnds73d63isg-a')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'projeto_chamados')
 
-db_path = get_database_path()
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_size": 10,
+    "max_overflow": 20
+}
 
 # Logger
 logging.basicConfig(level=logging.INFO)
-logging.info(f"Banco de dados configurado em: {db_path}")
+logging.info(f"Banco de dados configurado: postgresql://{DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # Inicialização do banco de dados
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Criação do banco de dados manualmente no início
-def create_db():
+# Teste de conexão ao banco de dados
+def test_db_connection():
     try:
-        if not os.path.exists(db_path):
-            with app.app_context():
-                db.create_all()
-                logging.info("Banco de dados criado com sucesso.")
+        with app.app_context():
+            db.session.execute('SELECT 1')
+            logging.info("Conexão com o banco de dados bem-sucedida.")
     except Exception as e:
-        logging.error(f"Erro ao criar o banco de dados: {e}")
+        logging.error("Erro ao conectar ao banco de dados.", exc_info=True)
 
-create_db()
+# Executa o teste de conexão
+test_db_connection()
+
+# Função utilitária para salvar entidades
+def salvar_entidade(entidade):
+    try:
+        db.session.add(entidade)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Erro ao salvar entidade: {e}", exc_info=True)
+        raise
 
 # Modelos
 class Chamado(db.Model):
+    __tablename__ = 'chamados'
     id = db.Column(db.Integer, primary_key=True)
-    numero = db.Column(db.String(10), unique=True, nullable=False)
+    numero = db.Column(db.String(10), unique=True, nullable=False, index=True)
     defeito = db.Column(db.Text, nullable=False)
     posto = db.Column(db.String(100), nullable=False)
     telefone = db.Column(db.String(15), nullable=False)
@@ -65,15 +81,25 @@ class Chamado(db.Model):
     status = db.Column(db.String(20), nullable=False, default="Aberto")
     data_abertura = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     data_fechamento = db.Column(db.DateTime, nullable=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    usuario = db.relationship('Usuario', backref=db.backref('chamados', lazy=True))
 
 class Usuario(db.Model):
+    __tablename__ = 'usuarios'
     id = db.Column(db.Integer, primary_key=True)
     nome_posto = db.Column(db.String(100), nullable=False)
     nome_usuario = db.Column(db.String(100), nullable=False)
-    email_unidade = db.Column(db.String(100), unique=True, nullable=False)
+    email_unidade = db.Column(db.String(100), unique=True, nullable=False, index=True)
     telefone = db.Column(db.String(15), nullable=False)
-    senha = db.Column(db.String(100), nullable=False)
+    senha = db.Column(db.String(255), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default="Cliente")
+
+    def set_senha(self, senha):
+        self.senha = generate_password_hash(senha)
+
+    def verificar_senha(self, senha):
+        return check_password_hash(self.senha, senha)
+
 
 # Rotas
 @app.route('/', methods=['GET', 'POST'])
@@ -226,7 +252,6 @@ def abrir_chamado():
 
     return render_template('abrir_chamado.html', postos=postos)
 
-
 @app.route('/responder_chamado/<int:id>', methods=['GET', 'POST'])
 def responder_chamado(id):
     if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
@@ -255,7 +280,6 @@ def responder_chamado(id):
 
     return render_template('responder_chamado.html', chamado=chamado)
 
->>>>>>> c7bd7f988a3248d924a2eca76d299ab86c0f602c
 @app.route('/chamados_abertos')
 def chamados_abertos():
     if 'usuario_id' not in session:
@@ -340,7 +364,6 @@ def trocar_senha():
         return render_template('trocar_senha.html', erro=erro)
 
     return render_template('trocar_senha.html')
-
 
 @app.route('/relatorio', methods=['GET', 'POST'])
 def relatorio():
