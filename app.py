@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 import os
 import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.sql import text
 
 # Configuração do app
 app = Flask(__name__)
@@ -48,7 +49,7 @@ migrate = Migrate(app, db)
 def test_db_connection():
     try:
         with app.app_context():
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             logging.info("Conexão com o banco de dados bem-sucedida.")
     except Exception as e:
         logging.error("Erro ao conectar ao banco de dados.", exc_info=True)
@@ -104,6 +105,7 @@ class Usuario(db.Model):
 with app.app_context():
     db.create_all()
     logging.info("Tabelas criadas ou verificadas.")
+
 
 # Rotas
 @app.route('/', methods=['GET', 'POST'])
