@@ -100,6 +100,10 @@ class Usuario(db.Model):
     def verificar_senha(self, senha):
         return check_password_hash(self.senha, senha)
 
+# Inicializar o banco de dados e criar tabelas, se necessário
+with app.app_context():
+    db.create_all()
+    logging.info("Tabelas criadas ou verificadas.")
 
 # Rotas
 @app.route('/', methods=['GET', 'POST'])
