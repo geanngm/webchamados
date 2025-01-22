@@ -182,7 +182,7 @@ def gerenciar_usuarios():
                 nome_usuario=nome_usuario,
                 email_unidade=email_unidade,
                 telefone=telefone,
-                senha=senha,
+                senha=generate_password_hash(senha),
                 tipo=tipo
             )
             db.session.add(novo_usuario)
@@ -196,6 +196,8 @@ def gerenciar_usuarios():
 
     return render_template('gerenciar_usuarios.html', usuarios=usuarios, postos=postos)
 
+# Adicionar as outras rotas mantendo a estrutura do código enviada.
+
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
     if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
@@ -205,23 +207,21 @@ def editar_usuario(id):
     postos = [f"{i:03}" for i in range(1, 201)] + ["SIH"]
 
     if request.method == 'POST':
+        usuario.nome_posto = request.form.get('nome_posto')
+        usuario.nome_usuario = request.form.get('nome_usuario')
+        usuario.email_unidade = request.form.get('email_unidade')
+        usuario.telefone = request.form.get('telefone')
+        nova_senha = request.form.get('senha')
+        if nova_senha:
+            usuario.set_senha(nova_senha)
         try:
-            usuario.nome_posto = request.form.get('nome_posto')
-            usuario.nome_usuario = request.form.get('nome_usuario')
-            usuario.email_unidade = request.form.get('email_unidade')
-            usuario.telefone = request.form.get('telefone')
-            senha = request.form.get('senha')
-            if senha:  # Apenas atualiza a senha se ela for fornecida
-                usuario.set_senha(senha)
-            usuario.tipo = request.form.get('tipo')
-
             db.session.commit()
-            flash("Usuário atualizado com sucesso!", "success")
             return redirect(url_for('gerenciar_usuarios'))
         except Exception as e:
             db.session.rollback()
-            logging.error(f"Erro ao editar usuário: {e}", exc_info=True)
-            flash("Erro ao atualizar o usuário. Tente novamente.", "danger")
+            logging.error(f"Erro ao editar usuário: {e}")
+            erro = "Erro ao editar usuário. Verifique os dados e tente novamente."
+            return render_template('editar_usuario.html', usuario=usuario, postos=postos, erro=erro)
 
     return render_template('editar_usuario.html', usuario=usuario, postos=postos)
 
