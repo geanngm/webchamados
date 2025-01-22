@@ -37,6 +37,25 @@
         button:hover {
             background-color: #0056b3;
         }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 10px auto;
+            max-width: 300px;
+        }
+        ul li {
+            background-color: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -47,6 +66,9 @@
         <label for="senha">Senha:</label>
         <input type="password" name="senha" id="senha" required>
         <button type="submit">Entrar</button>
+        {% if erro %}
+        <div class="error">{{ erro }}</div>
+        {% endif %}
     </form>
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
