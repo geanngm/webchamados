@@ -22,22 +22,19 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Função para verificar variáveis de ambiente obrigatórias
 def verificar_variaveis_ambiente():
-    if not os.getenv('GOOGLE_CREDENTIALS'):
-        raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
-    if not os.getenv('GOOGLE_DRIVE_FOLDER_ID'):
-        raise EnvironmentError("A variável de ambiente 'GOOGLE_DRIVE_FOLDER_ID' não foi configurada.")
+    required_vars = ['GOOGLE_CREDENTIALS', 'GOOGLE_DRIVE_FOLDER_ID']
+    for var in required_vars:
+        if not os.getenv(var):
+            raise EnvironmentError(f"A variável de ambiente '{var}' não foi configurada.")
 
 # Verifique as variáveis de ambiente
 verificar_variaveis_ambiente()
 
 # Configuração do Google Drive usando variáveis de ambiente
-GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
 
 # Carregar as credenciais a partir da variável de ambiente
 google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
-
-if not google_credentials_json:
-    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada corretamente.")
 
 # Decodificar o JSON das credenciais
 try:
@@ -125,7 +122,6 @@ def fazer_upload():
 # Inicialização
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
@@ -385,6 +381,7 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
 
