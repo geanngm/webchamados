@@ -115,6 +115,7 @@ def fazer_upload():
 if __name__ == '__main__':
     app.run(debug=True)
 
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -132,10 +133,10 @@ def login():
         flash('E-mail ou senha incorretos!', 'error')  # Exibe mensagem de erro no frontend
     return render_template('login.html')
 
-# Função auxiliar para verificar autenticação
 @app.before_request
 def require_login():
-    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static']:
+    # Ignorar a verificação para as rotas 'home', 'login' e 'static'
+    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static', 'login']:  # Exclui explicitamente 'login'
         return redirect(url_for('home'))
 
 # Rota para login
@@ -199,6 +200,7 @@ def editar_usuario(id):
             return render_template('editar_usuario.html', usuario=usuario, postos=postos, erro=erro)
 
     return render_template('editar_usuario.html', usuario=usuario, postos=postos)
+
 
 @app.route('/excluir_usuario/<int:id>', methods=['POST'])
 def excluir_usuario(id):
