@@ -6,7 +6,7 @@
     <title>Login</title>
     <style>
         body {
-            background: url('/static/fundo.jpeg') no-repeat center center fixed;
+            background: url("{{ url_for('static', filename='fundo.jpeg') }}") no-repeat center center fixed;
             background-size: cover;
             backdrop-filter: brightness(0.8);
             color: white;
@@ -56,9 +56,22 @@
             margin-bottom: 5px;
             text-align: center;
         }
+        .header, .footer {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+        .header h1, .footer p {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>Bem-vindo ao Sistema</h1>
+    </div>
+
     <h1>Login</h1>
     <form method="POST" action="/">
         <label for="email">Email:</label>
@@ -70,6 +83,7 @@
         <div class="error">{{ erro }}</div>
         {% endif %}
     </form>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         <ul>
@@ -79,5 +93,10 @@
         </ul>
     {% endif %}
     {% endwith %}
+
+    <div class="footer">
+        <p>&copy; 2025 - Todos os direitos reservados</p>
+    </div>
 </body>
 </html>
+
