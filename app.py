@@ -27,27 +27,29 @@ def verificar_variaveis_ambiente():
     if not os.getenv('GOOGLE_DRIVE_FOLDER_ID'):
         raise EnvironmentError("A variável de ambiente 'GOOGLE_DRIVE_FOLDER_ID' não foi configurada.")
 
+# Verifique as variáveis de ambiente
+verificar_variaveis_ambiente()
+
 # Configuração do Google Drive usando variáveis de ambiente
 GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
 
+# Carregar as credenciais a partir da variável de ambiente
 google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
 
 if not google_credentials_json:
     raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada corretamente.")
 
-# Tente decodificar o JSON de credenciais
+# Decodificar o JSON das credenciais
 try:
     credentials_info = json.loads(google_credentials_json)
-except json.JSONDecodeError:
-    raise ValueError("O conteúdo da variável de ambiente 'GOOGLE_CREDENTIALS' não é um JSON válido.")
-
-# Autenticação do Google Drive
-try:
     credentials = service_account.Credentials.from_service_account_info(
         credentials_info,
         scopes=['https://www.googleapis.com/auth/drive']
     )
     drive_service = build('drive', 'v3', credentials=credentials)
+    logging.info("Conexão com o Google Drive configurada com sucesso.")
+except json.JSONDecodeError:
+    raise ValueError("O conteúdo da variável de ambiente 'GOOGLE_CREDENTIALS' não é um JSON válido.")
 except Exception as e:
     raise RuntimeError(f"Erro ao configurar as credenciais do Google Drive: {e}")
 
@@ -64,8 +66,9 @@ def upload_to_drive():
         media = MediaFileUpload(arquivo, mimetype='application/x-sqlite3')
 
         # Fazer upload do arquivo
-        drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        logging.info("Banco de dados enviado para o Google Drive com sucesso.")
+        file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        logging.info(f"Banco de dados enviado com sucesso. File ID: {file.get('id')}")
+        return f"Banco de dados enviado com sucesso! File ID: {file.get('id')}"
     except Exception as e:
         logging.error(f"Erro ao enviar o banco para o Google Drive: {e}")
         raise RuntimeError(f"Erro ao enviar o banco para o Google Drive: {e}")
@@ -122,6 +125,7 @@ def fazer_upload():
 # Inicialização
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
