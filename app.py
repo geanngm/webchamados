@@ -1,6 +1,3 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import logging
 import os
@@ -123,8 +120,21 @@ def fazer_upload():
 if __name__ == '__main__':
     app.run(debug=True)
 
-@app.route('/')
-def home():
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        senha = request.form['senha']
+
+        # Buscar o usuário no banco pelo email
+        usuario = Usuario.query.filter_by(email_unidade=email).first()
+
+        if usuario and check_password_hash(usuario.senha, senha):
+            # Login bem-sucedido
+            session['user_id'] = usuario.id  # Exemplo: armazene o ID do usuário na sessão
+            return redirect('/dashboard')   # Redirecione para uma página segura após o login
+
+        flash('E-mail ou senha incorretos!', 'error')  # Exibe mensagem de erro no frontend
     return render_template('login.html')
 
 # Função auxiliar para verificar autenticação
@@ -435,5 +445,4 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
 
