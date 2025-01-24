@@ -98,7 +98,7 @@ class Chamado(db.Model):
     status = db.Column(db.String(20))
     data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
     data_fechamento = db.Column(db.DateTime, nullable=True)
-    
+
 # Rotas para criar o banco e testar upload
 @app.route('/criar_bd')
 def criar_bd():
@@ -121,6 +121,31 @@ def fazer_upload():
 # Inicialização
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/')
+def home():
+    return render_template('login.html')
+
+# Função auxiliar para verificar autenticação
+@app.before_request
+def require_login():
+    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static']:
+        return redirect(url_for('home'))
+
+# Rota para login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username, password=password).first()
+        if user:
+            session['user_id'] = user.id
+            flash('Login realizado com sucesso!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Usuário ou senha inválidos', 'danger')
+    return render_template('login.html')
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
@@ -379,8 +404,6 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-
 
 
 
