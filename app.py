@@ -138,8 +138,8 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
+        user = Usuario.query.filter_by(nome_usuario=username).first()  # Corrigir para `Usuario`
+        if user and user.check_password(password):  # Verificação de hash da senha
             session['user_id'] = user.id
             flash('Login realizado com sucesso!', 'success')
             return redirect(url_for('index'))
@@ -147,13 +147,23 @@ def login():
             flash('Usuário ou senha inválidos', 'danger')
     return render_template('login.html')
 
+
 # Rota para página principal após login
 @app.route('/index')
 def index():
     if 'user_id' not in session:
         flash('Por favor, faça login primeiro.', 'warning')
         return redirect(url_for('home'))
-    return render_template('index.html')  # Certifique-se de ter um arquivo index.html.
+    
+    # Obter informações do usuário logado
+    user = Usuario.query.get(session['user_id'])
+    if user:
+        return render_template('index.html', 
+                               nome_usuario=user.nome_usuario, 
+                               usuario_tipo=user.tipo)
+    else:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('home'))
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
