@@ -115,7 +115,6 @@ def fazer_upload():
 if __name__ == '__main__':
     app.run(debug=True)
 
-
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -200,7 +199,6 @@ def editar_usuario(id):
             return render_template('editar_usuario.html', usuario=usuario, postos=postos, erro=erro)
 
     return render_template('editar_usuario.html', usuario=usuario, postos=postos)
-
 
 @app.route('/excluir_usuario/<int:id>', methods=['POST'])
 def excluir_usuario(id):
