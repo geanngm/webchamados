@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import logging
 import os
@@ -19,13 +20,18 @@ db = SQLAlchemy(app)
 # Configuração do logger
 logging.basicConfig(level=logging.DEBUG)
 
+# Função para verificar variáveis de ambiente obrigatórias
+def verificar_variaveis_ambiente():
+    if not os.getenv('GOOGLE_CREDENTIALS'):
+        raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
+    if not os.getenv('GOOGLE_DRIVE_FOLDER_ID'):
+        raise EnvironmentError("A variável de ambiente 'GOOGLE_DRIVE_FOLDER_ID' não foi configurada.")
+
 # Configuração do Google Drive usando variáveis de ambiente
-GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
+verificar_variaveis_ambiente()
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
+
 google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
-
-if not google_credentials_json:
-    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
-
 credentials_info = json.loads(google_credentials_json)
 credentials = service_account.Credentials.from_service_account_info(
     credentials_info,
@@ -35,16 +41,22 @@ drive_service = build('drive', 'v3', credentials=credentials)
 
 # Função para fazer upload do banco de dados para o Google Drive
 def upload_to_drive():
+    arquivo = 'chamados_db.sqlite'
+    if not os.path.exists(arquivo):
+        logging.error("O arquivo do banco de dados não foi encontrado.")
+        return "Arquivo do banco de dados não encontrado."
+
     try:
         # Configurar os metadados do arquivo
-        file_metadata = {'name': 'chamados_db.sqlite', 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
-        media = MediaFileUpload('chamados_db.sqlite', mimetype='application/x-sqlite3')
-        
+        file_metadata = {'name': arquivo, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
+        media = MediaFileUpload(arquivo, mimetype='application/x-sqlite3')
+
         # Fazer upload do arquivo
         drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        logging.info("Banco de dados enviado para o Google Drive.")
+        logging.info("Banco de dados enviado para o Google Drive com sucesso.")
     except Exception as e:
         logging.error(f"Erro ao enviar o banco para o Google Drive: {e}")
+        raise RuntimeError(f"Erro ao enviar o banco para o Google Drive: {e}")
 
 # Modelos de Banco de Dados
 class Usuario(db.Model):
@@ -53,8 +65,14 @@ class Usuario(db.Model):
     nome_usuario = db.Column(db.String(100))
     email_unidade = db.Column(db.String(100), unique=True)
     telefone = db.Column(db.String(15))
-    senha = db.Column(db.String(100))
+    senha = db.Column(db.String(255))
     tipo = db.Column(db.String(50))
+
+    def set_password(self, password):
+        self.senha = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.senha, password)
 
 class Chamado(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,8 +102,8 @@ def criar_bd():
 @app.route('/fazer_upload')
 def fazer_upload():
     try:
-        upload_to_drive()
-        return "Banco de dados enviado para o Google Drive com sucesso!"
+        mensagem = upload_to_drive()
+        return mensagem if mensagem else "Banco de dados enviado para o Google Drive com sucesso!"
     except Exception as e:
         return f"Erro ao enviar o banco para o Google Drive: {e}"
 
@@ -106,7 +124,8 @@ def editar_usuario(id):
         usuario.nome_usuario = request.form.get('nome_usuario').strip()
         usuario.email_unidade = request.form.get('email_unidade').strip()
         usuario.telefone = request.form.get('telefone').strip()
-        usuario.senha = request.form.get('senha').strip()
+        if request.form.get('senha'):
+            usuario.set_password(request.form.get('senha').strip())
         usuario.tipo = request.form.get('tipo').strip()
 
         try:
