@@ -115,7 +115,12 @@ def fazer_upload():
 if __name__ == '__main__':
     app.run(debug=True)
 
-
+@app.before_request
+def require_login():
+    # Ignorar a verificação para as rotas 'home', 'login' e 'static'
+    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static']:
+        return redirect(url_for('home'))
+    
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -128,24 +133,9 @@ def login():
         if usuario and check_password_hash(usuario.senha, senha):
             # Login bem-sucedido
             session['user_id'] = usuario.id  # Exemplo: armazene o ID do usuário na sessão
-            return redirect('/dashboard')   # Redirecione para uma página segura após o login
+            return redirect('/dashboard')  # Redirecione para uma página segura após o login
 
         flash('E-mail ou senha incorretos!', 'error')  # Exibe mensagem de erro no frontend
-    return render_template('login.html')
-
-# Rota para login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = Usuario.query.filter_by(nome_usuario=username).first()  # Corrigir para `Usuario`
-        if user and user.check_password(password):  # Verificação de hash da senha
-            session['user_id'] = user.id
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('index'))
-        else:
-            flash('Usuário ou senha inválidos', 'danger')
     return render_template('login.html')
 
 
