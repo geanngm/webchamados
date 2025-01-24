@@ -9,6 +9,7 @@ from googleapiclient.http import MediaFileUpload
 import json
 from google.oauth2 import service_account
 
+
 # Configuração do Flask e SQLite
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chamados_db.sqlite'
@@ -415,8 +416,20 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
 
+        # Verificar se o usuário administrador já existe
         if not Usuario.query.filter_by(email_unidade='admin@admin.com').first():
-            admin = Usuario(nome_posto='Admin', nome_usuario='Administrador', email_unidade='admin@admin.com', telefone='0000000000', senha='admin123', tipo='Administrador')
+            # Armazenar a senha como hash
+            hashed_password = generate_password_hash('admin123', method='sha256')
+
+            # Criar usuário administrador com senha protegida
+            admin = Usuario(
+                nome_posto='Admin',
+                nome_usuario='Administrador',
+                email_unidade='admin@admin.com',
+                telefone='0000000000',
+                senha=hashed_password,
+                tipo='Administrador'
+            )
             db.session.add(admin)
             db.session.commit()
 
