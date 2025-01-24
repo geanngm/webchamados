@@ -147,6 +147,14 @@ def login():
             flash('Usuário ou senha inválidos', 'danger')
     return render_template('login.html')
 
+# Rota para página principal após login
+@app.route('/index')
+def index():
+    if 'user_id' not in session:
+        flash('Por favor, faça login primeiro.', 'warning')
+        return redirect(url_for('home'))
+    return render_template('index.html')  # Certifique-se de ter um arquivo index.html.
+
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
     if 'usuario_id' not in session or session.get('usuario_tipo') != 'Administrador':
@@ -404,6 +412,5 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
 
 
