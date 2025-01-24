@@ -3,9 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import logging
 import os
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+import json
+from google.oauth2 import service_account
 
 # Configuração do Flask e SQLite
 app = Flask(__name__)
@@ -18,11 +19,16 @@ db = SQLAlchemy(app)
 # Configuração do logger
 logging.basicConfig(level=logging.DEBUG)
 
-# Configuração do Google Drive
-GOOGLE_DRIVE_FOLDER_ID = '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf'
-SERVICE_ACCOUNT_FILE = r'C:\\Users\\geann.gm\\Desktop\\CREDENCIAL\\chave.json'
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE,
+# Configuração do Google Drive usando variáveis de ambiente
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
+google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
+
+if not google_credentials_json:
+    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
+
+credentials_info = json.loads(google_credentials_json)
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info,
     scopes=['https://www.googleapis.com/auth/drive']
 )
 drive_service = build('drive', 'v3', credentials=credentials)
@@ -63,6 +69,29 @@ class Chamado(db.Model):
     status = db.Column(db.String(20))
     data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
     data_fechamento = db.Column(db.DateTime, nullable=True)
+
+# Rotas para criar o banco e testar upload
+@app.route('/criar_bd')
+def criar_bd():
+    try:
+        db.create_all()
+        logging.info("Banco de dados criado com sucesso.")
+        return "Banco de dados criado com sucesso!"
+    except Exception as e:
+        logging.error(f"Erro ao criar o banco de dados: {e}")
+        return f"Erro ao criar o banco de dados: {e}"
+
+@app.route('/fazer_upload')
+def fazer_upload():
+    try:
+        upload_to_drive()
+        return "Banco de dados enviado para o Google Drive com sucesso!"
+    except Exception as e:
+        return f"Erro ao enviar o banco para o Google Drive: {e}"
+
+# Inicialização
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
@@ -320,3 +349,4 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
