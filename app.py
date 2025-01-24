@@ -7,6 +7,7 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
+import json
 
 # Configuração do Flask e SQLite
 app = Flask(__name__)
@@ -30,8 +31,10 @@ if google_credentials_json is None:
 
 # Carregar as credenciais do Google Drive a partir da variável de ambiente
 try:
-    credentials = service_account.Credentials.from_service_account_file(
-        google_credentials_json,
+    # As credenciais precisam ser passadas como um JSON carregado da variável de ambiente
+    credentials_info = json.loads(google_credentials_json)
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info,
         scopes=['https://www.googleapis.com/auth/drive']
     )
     drive_service = build('drive', 'v3', credentials=credentials)
