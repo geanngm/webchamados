@@ -133,12 +133,6 @@ def login():
         flash('E-mail ou senha incorretos!', 'error')  # Exibe mensagem de erro no frontend
     return render_template('login.html')
 
-@app.before_request
-def require_login():
-    # Ignorar a verificação para as rotas 'home', 'login' e 'static'
-    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static', 'login']:  # Exclui explicitamente 'login'
-        return redirect(url_for('home'))
-
 # Rota para login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
