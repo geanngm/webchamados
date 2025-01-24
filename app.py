@@ -20,33 +20,32 @@ db = SQLAlchemy(app)
 # Configuração do logger
 logging.basicConfig(level=logging.DEBUG)
 
-# Função para verificar variáveis de ambiente obrigatórias
-def verificar_variaveis_ambiente():
-    required_vars = ['GOOGLE_CREDENTIALS', 'GOOGLE_DRIVE_FOLDER_ID']
-    for var in required_vars:
-        if not os.getenv(var):
-            raise EnvironmentError(f"A variável de ambiente '{var}' não foi configurada.")
+# Configuração do Google Drive
+GOOGLE_DRIVE_FOLDER_ID = '12DKMnx7avXf8YADVzwpjuly0D9CZRzWt'
 
-# Verifique as variáveis de ambiente
-verificar_variaveis_ambiente()
-
-# Configuração do Google Drive usando variáveis de ambiente
-GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
-
-# Carregar as credenciais a partir da variável de ambiente
-google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
+# Credenciais diretamente no código para o ambiente Render
+google_credentials_json = {
+  "type": "service_account",
+  "project_id": "chamadoswebsih",
+  "private_key_id": "13611ff96a471ad2665be265f7e1968ba2c20257",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCrtZN75AS1Tc3S\nBSjqhkM0czy4rd1Q8NErBjr7ORTXal7booMsOrS1lnrEVoXeAw0+SfRnel8bBgy7\nptrfACr51Ov5ZWOmgMKqBXCzxwBMLAWEPKfO+blD1XkFl2aodEWiZDYW8fL7oEA9\n7Jlp32BaFvto2QfWrbVNA4HRSQdbwSbJXEFQxlrYW+yeKX5qIENkDtgBN1m3BH5L\nKiBBuvEDCm6h5ZyxiD9PbNB/KNl9W3UVN6ZQhEUc4nqW3+MemU29X+gE1en/7lqe\nqlyToXxtn6c31sKB82SRkq5ncOuhTJ4mZM5BIVkovq5iNd1Q+mDfxZQjTBKGO8eq\nZqvGatjlAgMBAAECggEAIoMuAB5OFfTr9BUmarEOy/mHkGUd0Tl+CURI0ZrhBgUy\nyLmK3PZ1wPPcfB8Z7Aw3+reZoLzXZdKa95KrdlwNx0ZVIb0PwPUra0oJo5DRjf3h\nI/mfDvphkvFS0F1kfGJWZrP2rTj3Sj0k/G1UTpPfxWvOH35T1YH3qWGVk6+2g2nj\noJ7oJvpogtIXxcmqvYGgSJZ6ZlDwMURLVAKACbHKuCF+FOdv0uE1cKSx6Fl5R3xH\nPEmCt8B5KBp0N8FW24gmk30Ln4OsugTqwK4p4E6ECsINqoo/QvhX3aEOejJkt7zr\n8zvp5tAZ6yKAVPGgMQCb99eDfZziH9SoMykiQncNVwKBgQDwqsG7KhQP3DesU04u\nPu3wGp2QdCAxn0lfCubLAbjff/WYxkMX3Fd2GOXJliSY2s5+Fh1V9n5pWCeGbwbd\n4YwP+Tnp36SESyVfjXsZKonv7KiFM2c080tYw4vBImjX79vhOSxD11uvne7ny9la\nsFBMk/8J3RG98xORfAwy00F//wKBgQC2piEBRT8HDCTSmNuiHs9KpOVVGdZ1kGZJ\n+MHjmnqIzVOVw+U0JQRQVW9uv1x4+eXGn3iNIy9X0SMTwIEJ4sTYjwghLLfPkku/\n7SAr4EGbnlG33VrUep4UVkiJD5HoVRXUbfeFKVZT4WJDbOsUHvZ++3QSyfxq2iy6\nxCq7u/2nGwKBgQDnH3WxovVlTd2BdvdL3k9vGIBc68jHHuu9hKCkMOE0cpSPxUdF\nsOullL+I2tIGoYtQ9zfxCCnaTTiYGCQGDccOyA/gFFDQY8Jeg2bGgl25thMY6Iaj\nCUtA0XpzXfJF/imxn9BsznNUsl1u6guw1kYnZLG27UFOpBQU0YZ9gPgUTQKBgFjh\nAICQxLnWM/jy/zWlznNhSGOf/hcZXF00moz5+BSn7bucJuW3+aBp4p6+qe4IlMKR\niWUMsRYHpA0RiPlZizZia69RBmUQqKHNbvFK4EIsyVEyeueYf2IgFo3zsKmg9c14\ncZEv611H+LwcvUv+QS7Lh9E4zwbkAg4kNTNDqIvvAoGBAN0cZTLH2GDfWaKP9zRF\nbQzo7V6djG/YtVA9VcZpI6AOIWwsHaP1r+ntFK9Z95RnNt2GsJ6l2dZ2TSipL34L\nR3HF7dxtyiRH+CzXLNSRzKEH97SBf5dhPi56FqBEfgPJzn76bP9HixfiwUjhc/TA\nUezdX9Z7INYiZ1pesKVWvaCt\n-----END PRIVATE KEY-----\n",
+  "client_email": "webchamadossih@chamadoswebsih.iam.gserviceaccount.com",
+  "client_id": "102535671815548508400",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/webchamadossih%40chamadoswebsih.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
 
 # Decodificar o JSON das credenciais
 try:
-    credentials_info = json.loads(google_credentials_json)
     credentials = service_account.Credentials.from_service_account_info(
-        credentials_info,
+        google_credentials_json,
         scopes=['https://www.googleapis.com/auth/drive']
     )
     drive_service = build('drive', 'v3', credentials=credentials)
     logging.info("Conexão com o Google Drive configurada com sucesso.")
-except json.JSONDecodeError:
-    raise ValueError("O conteúdo da variável de ambiente 'GOOGLE_CREDENTIALS' não é um JSON válido.")
 except Exception as e:
     raise RuntimeError(f"Erro ao configurar as credenciais do Google Drive: {e}")
 
@@ -99,7 +98,7 @@ class Chamado(db.Model):
     status = db.Column(db.String(20))
     data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
     data_fechamento = db.Column(db.DateTime, nullable=True)
-
+    
 # Rotas para criar o banco e testar upload
 @app.route('/criar_bd')
 def criar_bd():
@@ -122,7 +121,6 @@ def fazer_upload():
 # Inicialização
 if __name__ == '__main__':
     app.run(debug=True)
-
 
 @app.route('/editar_usuario/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
