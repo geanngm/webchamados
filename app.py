@@ -29,17 +29,27 @@ def verificar_variaveis_ambiente():
 
 # Configuração do Google Drive usando variáveis de ambiente
 GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
+
 google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
 
 if not google_credentials_json:
-    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
+    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada corretamente.")
 
-credentials_info = json.loads(google_credentials_json)
-credentials = service_account.Credentials.from_service_account_info(
-    credentials_info,
-    scopes=['https://www.googleapis.com/auth/drive']
-)
-drive_service = build('drive', 'v3', credentials=credentials)
+# Tente decodificar o JSON de credenciais
+try:
+    credentials_info = json.loads(google_credentials_json)
+except json.JSONDecodeError:
+    raise ValueError("O conteúdo da variável de ambiente 'GOOGLE_CREDENTIALS' não é um JSON válido.")
+
+# Autenticação do Google Drive
+try:
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials_info,
+        scopes=['https://www.googleapis.com/auth/drive']
+    )
+    drive_service = build('drive', 'v3', credentials=credentials)
+except Exception as e:
+    raise RuntimeError(f"Erro ao configurar as credenciais do Google Drive: {e}")
 
 # Função para fazer upload do banco de dados para o Google Drive
 def upload_to_drive():
@@ -371,6 +381,7 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
 
