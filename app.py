@@ -20,11 +20,23 @@ db = SQLAlchemy(app)
 # Configuração do logger
 logging.basicConfig(level=logging.DEBUG)
 
-# Configuração do Google Drive
-GOOGLE_DRIVE_FOLDER_ID = '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf'
-SERVICE_ACCOUNT_FILE = r'C:\\Users\\geann.gm\\Desktop\\CREDENCIAL\\chave.json'
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE,
+# Função para verificar variáveis de ambiente obrigatórias
+def verificar_variaveis_ambiente():
+    if not os.getenv('GOOGLE_CREDENTIALS'):
+        raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
+    if not os.getenv('GOOGLE_DRIVE_FOLDER_ID'):
+        raise EnvironmentError("A variável de ambiente 'GOOGLE_DRIVE_FOLDER_ID' não foi configurada.")
+
+# Configuração do Google Drive usando variáveis de ambiente
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', '18PAO6ky915YiuqvJgCrcfHXgOydMXbgf')
+google_credentials_json = os.getenv("GOOGLE_CREDENTIALS")
+
+if not google_credentials_json:
+    raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
+
+credentials_info = json.loads(google_credentials_json)
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info,
     scopes=['https://www.googleapis.com/auth/drive']
 )
 drive_service = build('drive', 'v3', credentials=credentials)
@@ -47,13 +59,6 @@ def upload_to_drive():
     except Exception as e:
         logging.error(f"Erro ao enviar o banco para o Google Drive: {e}")
         raise RuntimeError(f"Erro ao enviar o banco para o Google Drive: {e}")
-
-# Função para verificar variáveis de ambiente obrigatórias
-def verificar_variaveis_ambiente():
-    if not os.getenv('GOOGLE_CREDENTIALS'):
-        raise EnvironmentError("A variável de ambiente 'GOOGLE_CREDENTIALS' não foi configurada.")
-    if not os.getenv('GOOGLE_DRIVE_FOLDER_ID'):
-        raise EnvironmentError("A variável de ambiente 'GOOGLE_DRIVE_FOLDER_ID' não foi configurada.")
 
 # Modelos de Banco de Dados
 class Usuario(db.Model):
@@ -366,5 +371,6 @@ if __name__ == '__main__':
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
