@@ -11,7 +11,7 @@ import json
 
 # Configuração do Flask e SQLite
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chamados_db.sqlite'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/chamados.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'chave_secreta'
 
