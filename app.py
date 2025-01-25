@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
 import json
+import subprocess
 
 # Configuração do Flask e SQLite
 app = Flask(__name__)
@@ -19,6 +20,26 @@ db = SQLAlchemy(app)
 
 # Configuração do logger
 logging.basicConfig(level=logging.DEBUG)
+
+# Função para verificar e instalar o rclone
+def install_rclone():
+    try:
+        subprocess.run("curl https://rclone.org/install.sh | bash", shell=True, check=True)
+        logging.info("rclone instalado com sucesso.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Erro ao instalar o rclone: {e}")
+
+# Verifica se o rclone está instalado
+def check_rclone_installed():
+    try:
+        subprocess.run("rclone --version", shell=True, check=True)
+        logging.info("rclone já está instalado.")
+    except subprocess.CalledProcessError:
+        logging.warning("rclone não encontrado. Instalando...")
+        install_rclone()
+
+# Checar instalação do rclone
+check_rclone_installed()
 
 # Configuração do Google Drive
 GOOGLE_DRIVE_FOLDER_ID = '12DKMnx7avXf8YADVzwpjuly0D9CZRzWt'
@@ -45,7 +66,7 @@ except Exception as e:
 # Função para fazer upload do banco de dados para o Google Drive
 def upload_to_drive():
     # Caminho absoluto para o arquivo de banco de dados
-    arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chamados_db.sqlite')
+    arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance/chamados.db')
     
     if not os.path.exists(arquivo):
         logging.error("O arquivo do banco de dados não foi encontrado.")
@@ -112,6 +133,17 @@ def fazer_upload():
         return mensagem if mensagem else "Banco de dados enviado para o Google Drive com sucesso!"
     except Exception as e:
         return f"Erro ao enviar o banco para o Google Drive: {e}"
+
+# Função para sincronizar o banco de dados com o Google Drive usando o rclone
+@app.route('/sincronizar_drive')
+def sincronizar_drive():
+    try:
+        subprocess.run(['rclone', 'sync', 'gdrive:/12DKMnx7avXf8YADVzwpjuly0D9CZRzWt', 'instance/'], check=True)
+        logging.info("Banco de dados sincronizado com o Google Drive com sucesso!")
+        return "Banco de dados sincronizado com o Google Drive!"
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Erro ao sincronizar com o Google Drive: {e}")
+        return f"Erro ao sincronizar com o Google Drive: {e}"
 
 # Inicialização
 if __name__ == '__main__':
