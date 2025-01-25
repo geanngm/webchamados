@@ -44,14 +44,16 @@ except Exception as e:
 
 # Função para fazer upload do banco de dados para o Google Drive
 def upload_to_drive():
-    arquivo = 'chamados_db.sqlite'
+    # Caminho absoluto para o arquivo de banco de dados
+    arquivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chamados_db.sqlite')
+    
     if not os.path.exists(arquivo):
         logging.error("O arquivo do banco de dados não foi encontrado.")
         return "Arquivo do banco de dados não encontrado."
 
     try:
         # Configurar os metadados do arquivo
-        file_metadata = {'name': arquivo, 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
+        file_metadata = {'name': 'chamados_db.sqlite', 'parents': [GOOGLE_DRIVE_FOLDER_ID]}
         media = MediaFileUpload(arquivo, mimetype='application/x-sqlite3')
 
         # Fazer upload do arquivo
