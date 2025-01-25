@@ -119,9 +119,8 @@ if __name__ == '__main__':
 
 @app.before_request
 def require_login():
-    # Ignorar a verificação para as rotas 'home', 'login' e 'static'
-    if 'user_id' not in session and request.endpoint not in ['home', 'login', 'static']:
-        return redirect(url_for('home'))
+    if 'user_id' not in session and request.endpoint not in ['login', 'static']:
+        return redirect(url_for('login'))  # Redirecionar para a página de login
     
 @app.route('/', methods=['GET', 'POST'])
 def login():
