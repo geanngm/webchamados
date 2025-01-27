@@ -7,7 +7,6 @@ import os
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-import json
 import subprocess
 
 # Configuração do Flask e SQLite
@@ -44,18 +43,17 @@ check_rclone_installed()
 # Configuração do Google Drive
 GOOGLE_DRIVE_FOLDER_ID = '12DKMnx7avXf8YADVzwpjuly0D9CZRzWt'
 
-# Usar a variável de ambiente para as credenciais
-google_credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+# Caminho para as credenciais do Google Cloud no sistema local
+google_credentials_path = r'C:\Users\ssp\Desktop\chave\credencial.json'
 
-if google_credentials_json is None:
-    raise RuntimeError("A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS não foi definida.")
+# Verificar se o arquivo de credenciais existe
+if not os.path.exists(google_credentials_path):
+    raise RuntimeError(f"O arquivo de credenciais '{google_credentials_path}' não foi encontrado.")
 
-# Carregar as credenciais do Google Drive a partir da variável de ambiente
+# Carregar as credenciais do Google Drive a partir do arquivo local
 try:
-    # As credenciais precisam ser passadas como um JSON carregado da variável de ambiente
-    credentials_info = json.loads(google_credentials_json)
-    credentials = service_account.Credentials.from_service_account_info(
-        credentials_info,
+    credentials = service_account.Credentials.from_service_account_file(
+        google_credentials_path,
         scopes=['https://www.googleapis.com/auth/drive']
     )
     drive_service = build('drive', 'v3', credentials=credentials)
